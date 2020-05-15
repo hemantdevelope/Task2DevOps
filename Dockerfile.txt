@@ -1,0 +1,56 @@
+ROM centos:latest
+#Installing javaJDK and Jenkins.......
+RUN yum update -y 
+RUN yum install which -y 
+RUN yum install sudo -y 
+RUN echo "Net Tools is being installed:::" 
+RUN dnf install  net-tools -y || echo "ERROR: Net-Tools could not be installed......................" 
+RUN echo "Curl is installing:::" 
+RUN dnf install  curl -y  || echo "ERROR: Curl could not be installed................................"    
+RUN dnf install  wget -y || echo "ERROR: Wget could not be installed.................................." 
+RUN echo "Setting jenkins repository:::"  
+RUN wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins.io/redhat-stable/jenkins.repo  || echo "ERROR: jenkins repo not set................." 
+RUN echo "Importing Jenkins Key:::" 
+RUN rpm --import http://pkg.jenkins.io/redhat-stable/jenkins.io.key  || echo "ERROR: Jenkins Key could not be imported..........."  
+RUN echo "Installing Jenkins:::" 
+RUN dnf install -v jenkins -y 
+RUN echo "Java JDK is installing:::"  
+RUN dnf install  java-11-openjdk-devel -y || echo "ERROR: Javajdk could not be installed................" 
+
+
+
+
+#SuperUser Permissions to Jenkins
+RUN echo -e "jenkins	ALL=(ALL) 	NOPASSWD: ALL" | cat >> /etc/sudoer
+
+
+#Installing openssh server and client to access base docker from the docker container
+RUN echo "Installing Openssh-Server::::::::::"  
+RUN yum install -qy openssh-server || echo "ERROR: SSH-Server could not be installed.............." 
+RUN echo "Installlin Openssh-client:::::::"  
+RUN yum install -qy openssh-clients || echo "ERROR: SSH-Client could not be installed................"
+
+
+#expose the port of the docker container
+EXPOSE 8080
+
+
+
+
+#print the initial password of jenkins--> which could be reset
+RUN echo "default password is :" 
+RUN cat /var/lib/jenkins/secrets/initialAdminPassword || echo "This file is not present............"
+#ssh keygen transfer ---- to remote docker
+COPY id_rsa.pub /root/.ssh/
+
+
+#installing Git 
+RUN yum install git -y || echo "Git is not able to install"
+#installing python3
+RUN yum install python3 -y || echo "python can't be installed"
+
+
+
+#start jenkins every time you run the image
+
+CMD ["java",
